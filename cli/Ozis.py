@@ -88,13 +88,15 @@ class Oasis:
 
     colocar un caracter o otro
 
-    ( oppus | sierra )
+    [( oppus | sierra )]
 
     se eligira aleatoreamente cual 
 
     https://youtu.be/WCCovrKvAtU
     '''
     def __init__(self,string:str):
+        self.clearList = lambda lst,start,end: [d for d in lst if not((d == start) or (d == end))]
+        self.clearSpaces = lambda lst: [x for x in lst if x != '']
         self.string = string
         self.string += ' '
         self.loadModules = []
@@ -177,10 +179,11 @@ class Oasis:
         [[]]
         '''
         
-        lst = [x for x in lst if x != '']
+        lst = self.clearSpaces(lst)#[x for x in lst if x != '']
         if (lst.count(126)  or lst.count(124)) > 1:
             raise SyntaxError('error se ha insertado mas de un ~ o un | en el rango')
-        clear = [d for d in lst if not((d == 123) or (d == 125))]# limpiamos de los {}
+        #clear = [d for d in lst if not((d == 123) or (d == 125))]# limpiamos de los {}
+        clear = self.clearList(lst,123,125)
         clear = self.cutForCoincidence(clear,char=126)
         clear[1] = self.cutForCoincidence(clear[1],char=124)
         nc = []
@@ -199,8 +202,33 @@ class Oasis:
         #print(nc)
         nc.insert(0,'r')
         return nc
-    def insChoice(self,lst):
-        pass
+    def ascii2char(self,lst):
+        chain = ''
+        for n in lst:
+            chain += chr(n)
+        return chain
+    def insChoice(self,lst:list) -> list:
+        '''
+        funcion destinada a insertar e interpretar los caracteres 
+        que se escogeran literalmente 
+        ejemplo:
+        ( true | false )
+
+
+        [ (true | false) {10~30|4} ]
+
+        '''
+        if (lst.count(124) or lst.count(40) or lst.count(41)) > 1:
+            raise SyntaxError('error: se ha incluido mas de un (, ) o | en una sentencia de seleccion')
+        cls = self.clearSpaces(lst)# limpiamos la lista de espacios
+        cls = self.clearList(cls,40,41)# limpiamos la lista de ()
+        cls = self.cutForCoincidence(cls,124)# cortamos el | 
+        nc = []
+        for x in cls:
+            nc.append(self.ascii2char(x))
+        
+        print('clist:',cls,nc)
+        return nc
     def procesateString(self):
         self.codecs = [ ord(x) for x in self.string]
         #print(self.codecs)
@@ -263,23 +291,26 @@ class Oasis:
         for n in globSpecialChr:
             #print(n,len(ncodecs))
             self.replaceSpacesInSpecialsCaracters(ncodecs,n)
-        print('ncodecs:',ncodecs)
+        print('ncodecs                   :',ncodecs)
+        #poolConcat.extend(poolCharacters)# beta
         ps = [ x for x in self.getConcatCodes(poolConcat)]
+        ps2 = [x for x in self.getConcatCodes(poolCharacters)]
         #print('pps:',ps)
         #print(ncodecs)
         #print(ncodecs)
         nqd = [ n for x,y in poolConcat for n in range(x,y+1)]# obtenemos las posiciones de los caracteres entre []
         # nqd = [ x for x in range(poolConcat[0],poolConcat[1])]
-        #psr = [ n for x,y in ]
         for x in nqd:
             ncodecs[x] = ''
             # eliminamos el valor de la lista 
-        ncodecs = [ x for x in ncodecs if x != '']
+        ncodecs = self.clearSpaces(ncodecs)#[ x for x in ncodecs if x != '']
         #print('ne',ncodecs,ps)
         #ncodecs = [ x for x in self.cutForCoincidence(ncodecs) if not((91 in x) or (93 in x))]# cortamos la lista cada espacio)
         #print('eps',ncodecs,ps)
         # y limpiamos de listas con []
         self.RangeReplacePop(ncodecs,ps)
+        self.RangeReplacePop(ncodecs,ps2)
+        
         #ncodecs = [ x for x in ncodecs if x != []]
         ncodecs = [ x for x in self.cutForCoincidence(ncodecs) if not((91 in x) or (93 in x))]# cortamos la lista cada espacio)
         ncodecs = [ x for x in ncodecs if x != []]# filtramos listas vacias
@@ -287,7 +318,8 @@ class Oasis:
         #print(ps)
         mods = []
         flg = False
-        #print('ts',ncodecs)
+        print('ts',ncodecs)
+        #XXX: bug al colocar () sin corchetes no respeta el orden
         for idx,x in enumerate(ncodecs):
             idn = 0
             #print(x)
@@ -316,11 +348,10 @@ class Oasis:
                             pass
                             #self.cutForCoincidence(m,)
                         if m[0] == 40:
-                            
+                            self.insChoice(m)
                             print('cuad',m)
                         else:
                             ...
-                            print('emme',m)
                             mods.append(m)
                             continue
                 else:
@@ -344,7 +375,7 @@ class Oasis:
         #print(ncodecs)
         #self.loadMod(mods,ncodecs)# cargamos los modulos
         #self.lddata.generateCoords.update({'codecs':ncodecs})
-        #self.lddata.run()
+        #self.lddata.run()'''
     def decode(self,ncodecs):
         chain = ''
         #st = '['
@@ -422,7 +453,7 @@ class Oasis:
         #print('DCT DISTTT', DEFAULT_DCT.get(self.kwds.get(42)))
         self.lddata = Generator(dct,ncodecs)
         #self.lddata = LoadData(list(self.loadModules))
-ps = Oasis('``@@@@ [`@@@ ### ****] {144 ~ 42 | 3} ****** ######   [``@@@ *****] [{ 220 ~ 124 | 800}]  ( oppus | cierra ) [( oppus | cierra )]')
+ps = Oasis('``@@@@ [`@@@ ### ****] {144 ~ 42 | 3} ****** ######   [``@@@ *****] [{ 220 ~ 124 | 800}] ( oppus | cierra ) [( tango | alfa )]')
 # [ [[96,64, 64, 64, 64, 64],[94,94,94,94,94]],[35,35,35,35,35,35,35,35],[[]]]] [`@@@@@ ^^^^^] ######## [@@@@@@ $$$$$$$]
 # [12 ~ 2000]
 # [[2,64,64],[12,12,12,12]],[44,4,4,4,4,4],[]
