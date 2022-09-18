@@ -140,7 +140,8 @@ class Oasis:
             n,y = x.pop(0)
             mn = min(n,y)
             for n in x:
-                lst.insert(mn,n)
+                lst[mn] = n
+                #lst.insert(mn,n)
     def replaceSpacesInSpecialsCaracters(self,chain:list,pool:list):
         '''
         chain -> la lista de la cadena donde se encuentra el caracter especial
@@ -291,10 +292,10 @@ class Oasis:
         for n in globSpecialChr:
             #print(n,len(ncodecs))
             self.replaceSpacesInSpecialsCaracters(ncodecs,n)
-        print('ncodecs                   :',ncodecs)
+        #print('ncodecs                   :',ncodecs)
         #poolConcat.extend(poolCharacters)# beta
         ps = [ x for x in self.getConcatCodes(poolConcat)]
-        ps2 = [x for x in self.getConcatCodes(poolCharacters)]
+        #ps2 = [x for x in self.getConcatCodes(poolCharacters)]
         #print('pps:',ps)
         #print(ncodecs)
         #print(ncodecs)
@@ -303,14 +304,17 @@ class Oasis:
         for x in nqd:
             ncodecs[x] = ''
             # eliminamos el valor de la lista 
-        ncodecs = self.clearSpaces(ncodecs)#[ x for x in ncodecs if x != '']
+        #ncodecs = self.clearSpaces(ncodecs)#[ x for x in ncodecs if x != '']
         #print('ne',ncodecs,ps)
         #ncodecs = [ x for x in self.cutForCoincidence(ncodecs) if not((91 in x) or (93 in x))]# cortamos la lista cada espacio)
-        #print('eps',ncodecs,ps)
+        print('eps',ps,ncodecs)
         # y limpiamos de listas con []
+
         self.RangeReplacePop(ncodecs,ps)
-        self.RangeReplacePop(ncodecs,ps2)
-        
+        #self.RangeReplacePop(ncodecs,ps2)
+        ncodecs = self.clearSpaces(ncodecs)
+        print("clear".center(20,'-'))
+        print(ncodecs)
         #ncodecs = [ x for x in ncodecs if x != []]
         ncodecs = [ x for x in self.cutForCoincidence(ncodecs) if not((91 in x) or (93 in x))]# cortamos la lista cada espacio)
         ncodecs = [ x for x in ncodecs if x != []]# filtramos listas vacias
@@ -318,7 +322,7 @@ class Oasis:
         #print(ps)
         mods = []
         flg = False
-        print('ts',ncodecs)
+        print('ts   ',ncodecs)
         #XXX: bug al colocar () sin corchetes no respeta el orden
         for idx,x in enumerate(ncodecs):
             idn = 0
@@ -348,7 +352,8 @@ class Oasis:
                             pass
                             #self.cutForCoincidence(m,)
                         if m[0] == 40:
-                            self.insChoice(m)
+                            n[subidx] = self.insChoice(m)
+
                             print('cuad',m)
                         else:
                             ...
@@ -365,11 +370,12 @@ class Oasis:
                             x = self.insRange(x)
                             ncodecs[idx] = x
                         if x[0] == 40:
+                            x[idx] = self.insChoice(x)
                             print('cuad222',x)
                         mods.append(x)
                         #print('mos',mods)
                         idn = id(x)
-        #print('ncodecs::',ncodecs)
+        print('ncodecs::',ncodecs)
         #print(mods)
         #print('pnc',poolnumConcat)
         #print(ncodecs)
@@ -453,7 +459,7 @@ class Oasis:
         #print('DCT DISTTT', DEFAULT_DCT.get(self.kwds.get(42)))
         self.lddata = Generator(dct,ncodecs)
         #self.lddata = LoadData(list(self.loadModules))
-ps = Oasis('``@@@@ [`@@@ ### ****] {144 ~ 42 | 3} ****** ######   [``@@@ *****] [{ 220 ~ 124 | 800}] ( oppus | cierra ) [( tango | alfa )]')
+ps = Oasis('``@@@@ [`@@@ ### ****]  ****** ######   [``@@@ ****] {112~3333|3}  ### [(chardet | cyna)] ')
 # [ [[96,64, 64, 64, 64, 64],[94,94,94,94,94]],[35,35,35,35,35,35,35,35],[[]]]] [`@@@@@ ^^^^^] ######## [@@@@@@ $$$$$$$]
 # [12 ~ 2000]
 # [[2,64,64],[12,12,12,12]],[44,4,4,4,4,4],[]
