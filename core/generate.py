@@ -1,7 +1,6 @@
 import asyncio
 
 from DGT.core.merger import DEFAULT_DCT, LoadData
-
 class Generator:
     def __init__(self,modules,chainList) -> None:
         self.modules = modules
@@ -49,9 +48,11 @@ class Generator:
             
             if isinstance(n,list):
                 for q in n:
-                    #print(q)
+                    print(q)
                     async for r in self.onCoincidence(q):
-                        print(r,q)
+                        ...
+                        #print('hello')
+                        #print(r,q)
                 """
                 if idn != id(n):
                     #print(n)
@@ -59,15 +60,18 @@ class Generator:
                         print(p,n)
                     #print(module)
                     #print(n)
-                    idn = id(n)"""
-            '''
+                    idn = id(n)
             else:
+
                 if idlst != id(lst):
-                    #print(lst)
+                    print(lst)
                     idlst = id(lst)
-                    #self.lddata.lst = '''
+                    #self.lddata.lst = 
+                continue"""
     async def main(self):
         #print(self.chainList)
+        print(self.modules)
+
         for x in self.chainList:
             if isinstance(x,list):
                 idn = 0

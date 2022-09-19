@@ -4,6 +4,7 @@ from multiprocessing import pool
 from typing import final
 from ..core.merger import DEFAULT_DCT,LoadData
 from ..core.generate import Generator
+from ..core.data import kwds
 
 class Oasis:
     '''
@@ -100,9 +101,7 @@ class Oasis:
         self.string = string
         self.string += ' '
         self.loadModules = []
-        self.kwds = {
-            64:'names',35:'numbers',36:'products',42:'guid',123:'abso',40:'characters'
-        }
+        self.kwds = kwds
         self.procesateString()
         #self.loadMod(data=self.jop)
         
@@ -213,7 +212,7 @@ class Oasis:
         funcion destinada a insertar e interpretar los caracteres 
         que se escogeran literalmente 
         ejemplo:
-        ( true | false )
+        [( true | false )]
 
 
         [ (true | false) {10~30|4} ]
@@ -227,8 +226,8 @@ class Oasis:
         nc = []
         for x in cls:
             nc.append(self.ascii2char(x))
-        
-        print('clist:',cls,nc)
+        nc.insert(0,40)
+        #print('clist:',cls,nc)
         return nc
     def procesateString(self):
         self.codecs = [ ord(x) for x in self.string]
@@ -250,16 +249,6 @@ class Oasis:
         poolCharacters = []
         pchar = []
         globSpecialChr = []
-        '''
-            if(self.string[cc] ==  '{'):
-                poolNumbers = list()
-                pnc = True# a;adimos {}
-                poolNumbers.append(cc)
-            if(self.string[cc] == '}'):
-                pnc = False
-                poolNumbers.append(cc)
-                poolnumConcat.append(poolNumbers)
-        '''
         while (cc <= len(self.codecs) - 1):
             match self.codecs[cc]:
                 case 40:
@@ -307,14 +296,14 @@ class Oasis:
         #ncodecs = self.clearSpaces(ncodecs)#[ x for x in ncodecs if x != '']
         #print('ne',ncodecs,ps)
         #ncodecs = [ x for x in self.cutForCoincidence(ncodecs) if not((91 in x) or (93 in x))]# cortamos la lista cada espacio)
-        print('eps',ps,ncodecs)
+        #print('eps',ps,ncodecs)
         # y limpiamos de listas con []
 
         self.RangeReplacePop(ncodecs,ps)
         #self.RangeReplacePop(ncodecs,ps2)
         ncodecs = self.clearSpaces(ncodecs)
-        print("clear".center(20,'-'))
-        print(ncodecs)
+        #print("clear".center(20,'-'))
+        #print(ncodecs)
         #ncodecs = [ x for x in ncodecs if x != []]
         ncodecs = [ x for x in self.cutForCoincidence(ncodecs) if not((91 in x) or (93 in x))]# cortamos la lista cada espacio)
         ncodecs = [ x for x in ncodecs if x != []]# filtramos listas vacias
@@ -322,7 +311,7 @@ class Oasis:
         #print(ps)
         mods = []
         flg = False
-        print('ts   ',ncodecs)
+        #print('ts   ',ncodecs)
         #XXX: bug al colocar () sin corchetes no respeta el orden
         for idx,x in enumerate(ncodecs):
             idn = 0
@@ -353,8 +342,8 @@ class Oasis:
                             #self.cutForCoincidence(m,)
                         if m[0] == 40:
                             n[subidx] = self.insChoice(m)
-
-                            print('cuad',m)
+                            #print('cuad',n[subidx])
+                            mods.append(n[subidx])
                         else:
                             ...
                             mods.append(m)
@@ -369,19 +358,18 @@ class Oasis:
                         if x[0] == 123:
                             x = self.insRange(x)
                             ncodecs[idx] = x
-                        if x[0] == 40:
-                            x[idx] = self.insChoice(x)
-                            print('cuad222',x)
                         mods.append(x)
                         #print('mos',mods)
                         idn = id(x)
-        print('ncodecs::',ncodecs)
+        #print('ncodecs::',ncodecs)
         #print(mods)
+
         #print('pnc',poolnumConcat)
         #print(ncodecs)
-        #self.loadMod(mods,ncodecs)# cargamos los modulos
+        self.loadMod(mods,ncodecs)# cargamos los modulos
         #self.lddata.generateCoords.update({'codecs':ncodecs})
-        #self.lddata.run()'''
+        self.lddata.run()
+        # '''
     def decode(self,ncodecs):
         chain = ''
         #st = '['
@@ -423,8 +411,12 @@ class Oasis:
 
         '''
         for x in data:
+            #print('eqq',x)
+            if x[0] == 40:
+                x.pop(0)
+                self.loadModules.extend([[DEFAULT_DCT.get(self.kwds.get(40)),40,x]])
             if x[0] == 'r':
-                print('equs',x)
+                #print('equs',x)
                 x.pop(0)# eliminamos el caracter de rango
                 self.loadModules.extend([[DEFAULT_DCT.get(self.kwds.get(123)),123,x]])
                 continue# usamos continue para saltar por que si no se generaran mas 
@@ -451,16 +443,17 @@ class Oasis:
         for x in self.loadModules:
             if isinstance(x,list):
                 if len(x) == 2:
-                    print(x)
+                    #print(x)
                     dct[x[1]] = x[0]
                 else:
                     dct[x[1]] = [x[0],x[-1]]
-        #print(data)
+        #print(dct)
         #print('DCT DISTTT', DEFAULT_DCT.get(self.kwds.get(42)))
         self.lddata = Generator(dct,ncodecs)
         #self.lddata = LoadData(list(self.loadModules))
-ps = Oasis('``@@@@ [`@@@ ### ****]  ****** ######   [``@@@ ****] {112~3333|3}  ### [(chardet | cyna)] ')
+ps = Oasis('``@@@@ [`@@@ ### ****]  ****** ######   [``@@@ ****] {112~3333|3}  ### [(chardet | cyna) ****] ')
 # [ [[96,64, 64, 64, 64, 64],[94,94,94,94,94]],[35,35,35,35,35,35,35,35],[[]]]] [`@@@@@ ^^^^^] ######## [@@@@@@ $$$$$$$]
 # [12 ~ 2000]
 # [[2,64,64],[12,12,12,12]],[44,4,4,4,4,4],[]
 #print(DEFAULT_DCT)
+# [[96,96,64,64,64,64],[[96,96,64,64,64],[42,42,42],[35,35,35]]] - > [(2,64),[[,]]]
