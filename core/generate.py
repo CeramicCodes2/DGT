@@ -12,7 +12,7 @@ class Generator:
     def __init__(self,modules,chainList) -> None:
         self.modules = modules
         self.chainList = chainList
-        self.controlCharacters = [96,'r']
+        self.controlCharacters = [96,'r',43]
     def run(self):
         asyncio.run(self.main())
     async def countCoincidence(self,n):
@@ -89,7 +89,7 @@ class Generator:
             case 'r':
                 return self.modules.get(123)
             case _:
-                raise NameError(f'caracter desconosido {char}')
+                raise NameError(f'caracter desconocido {char}')
         pass
     def checkStr(self,lst) -> bool:
         '''
@@ -127,9 +127,12 @@ class Generator:
         #print('apprsCOUNT',listApprs,'LIST',lst)
         if listApprs[0][0] == 96:
             char,apprs = listApprs[0]
-            #print('APC LL',listApprs)
+            print('APC LL',listApprs)
             mod = await self.specialCharacters(char,apprs)
-            return (listApprs[1],mod)
+            if listApprs[-1][0] == 43:
+                return ((listApprs[1],listApprs[-1]),mod)
+            else:
+                return ((listApprs[1],1))# al resultado se le restara un 1
         for x in listApprs:
             char,apprs = x
             #print('pre',char)
