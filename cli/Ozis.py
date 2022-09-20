@@ -335,8 +335,8 @@ class Oasis:
                             mods.append(m)
                         if m[0] == 123:
                             m = self.insRange(m)
-                            n[subidx] = m 
-                            #print(n[subidx])
+                            n[subidx] = m.copy()# colocamos una copia
+                            print(n[subidx])
                             mods.append(m)
                             pass
                             #self.cutForCoincidence(m,)
@@ -357,7 +357,8 @@ class Oasis:
                             x.insert(0,(con,))
                         if x[0] == 123:
                             x = self.insRange(x)
-                            ncodecs[idx] = x
+                            ncodecs[idx] = x.copy()
+                            print(ncodecs[idx])
                         mods.append(x)
                         #print('mos',mods)
                         idn = id(x)
@@ -366,6 +367,10 @@ class Oasis:
 
         #print('pnc',poolnumConcat)
         #print(ncodecs)
+        #cpy = [ x.copy() if isinstance(x,list) else x for x in ncodecs]# creamos una lista completamente copiada
+        # por alguna razon un puntero de una lista de ncodecs apunta a mods de tal forma que si 
+        # se modifica la lista de mods entonces se modifica la lista de ncodecs 
+        #print('copy list',cpy)
         self.loadMod(mods,ncodecs)# cargamos los modulos
         #self.lddata.generateCoords.update({'codecs':ncodecs})
         self.lddata.run()
@@ -410,15 +415,17 @@ class Oasis:
         y posterior el generador de datos invocara a el cargador de datos
 
         '''
+        #print('START DATA'.center(100,'-'))
+        #print(data)
         for x in data:
             #print('eqq',x)
             if x[0] == 40:
                 x.pop(0)
-                self.loadModules.extend([[DEFAULT_DCT.get(self.kwds.get(40)),40,x]])
+                self.loadModules.extend([[DEFAULT_DCT.get(self.kwds.get(40)),40]])
             if x[0] == 'r':
                 #print('equs',x)
                 x.pop(0)# eliminamos el caracter de rango
-                self.loadModules.extend([[DEFAULT_DCT.get(self.kwds.get(123)),123,x]])
+                self.loadModules.extend([[DEFAULT_DCT.get(self.kwds.get(123)),123]])
                 continue# usamos continue para saltar por que si no se generaran mas 
             if isinstance(x[0], tuple):
                 #print(DEFAULT_DCT.get('names')[x[1] -  1])s
@@ -447,11 +454,12 @@ class Oasis:
                     dct[x[1]] = x[0]
                 else:
                     dct[x[1]] = [x[0],x[-1]]
+        #print(ncodecs,data)
         #print(dct)
         #print('DCT DISTTT', DEFAULT_DCT.get(self.kwds.get(42)))
         self.lddata = Generator(dct,ncodecs)
         #self.lddata = LoadData(list(self.loadModules))
-ps = Oasis('``@@@@ [`@@@@@@@@ ### ****]  ****** ######   [``@@@ ****] {112~3333|3}  ### [(chardet | cyna) ****] ')
+ps = Oasis('``@@@@ [`@@@@@@@@ ### ****]  ****** ######   [``@@@ ****] {112~3333|3}  ### [(chardet | cyna) ****]  [(cypher | control)] [{72~3}] [{314~200}]')
 # [ [[96,64, 64, 64, 64, 64],[94,94,94,94,94]],[35,35,35,35,35,35,35,35],[[]]]] [`@@@@@ ^^^^^] ######## [@@@@@@ $$$$$$$]
 # [12 ~ 2000]
 # [[2,64,64],[12,12,12,12]],[44,4,4,4,4,4],[]

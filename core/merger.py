@@ -12,7 +12,8 @@ DEFAULT_DCT = {
     'numbers': 'hello',
     'guid':'fuck',
     'abso':lambda x,y,n: [n for n in range(x,y+1,n)],
-    'characters':lambda characters: choice(characters)
+    'characters':lambda characters: choice(characters),
+    'default':''
 }
 """
 https://www.youtube.com/watch?v=MzC19OfZAOo
