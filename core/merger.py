@@ -3,14 +3,16 @@ from json import loads
 from os import getcwd,walk
 from os.path import join,isfile
 from random import randint,choice
+from secrets import randbits
 from itertools import zip_longest
+from uuid import uuid4
 import asyncio
 DEFAULT_DCT = {
     'names':
         [ join(x,name) for x,y,z in walk(join(getcwd(),'DGT','dataBase')) for name in z if name.startswith('names')],
     'eage':  lambda startEage,endEage: randint([startEage,endEage]),
-    'numbers': 'hello',
-    'guid':'fuck',
+    'numbers': lambda lenght: randbits(lenght),
+    'guid':lambda numberOfuuid: [ uuid4() for x in range(0,numberOfuuid)],
     'abso':lambda x,y,n: [n for n in range(x,y+1,n)],
     'characters':lambda characters: choice(characters),
     'default':''
@@ -58,6 +60,7 @@ class LoadData:
         # lista con nombres de las claves de los ficheros de datos a cargar
         self.dct = dct
         self.idx = 0
+        self.functionFiltrer = ''
         # dct es un diccionario en el que se indican las claves que se usaran para 
         # cargar los datos por defecto se suministra DEFAULT_DCT
         #self.load()
@@ -71,6 +74,7 @@ class LoadData:
         #self.taskPool = [ x for x in self.dataLoad]
         self.filesPool = []
         self.filesPool.append(await loop.run_in_executor(None, self.loadder,self.lst))
+        async for x in self.filter(self.functionFiltrer,self.lst): print(x)
     async def filter(self,function,modules):
         async for x in self.readder(modules=modules):
             yield function(x)
@@ -114,4 +118,7 @@ class LoadData:
             line_counter += 1
             yield (headers,data)'''
         #return (headers,data)
-#test = LoadData(lst=[DEFAULT_DCT.get('names')[0]]).run()
+print(DEFAULT_DCT.get('names')[0])
+test = LoadData(lst=[DEFAULT_DCT.get('names')[0]])
+test.functionFiltrer = lambda x: x
+test.run()

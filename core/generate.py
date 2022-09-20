@@ -1,4 +1,5 @@
 import asyncio
+from inspect import isfunction
 
 from DGT.core.merger import DEFAULT_DCT, LoadData
 
@@ -119,13 +120,14 @@ class Generator:
             return (lst,self.modules.get(40))
         elif self.chrInList(lst):
             char = lst[0]
-            #print('possible character',lst,await self.specialCharacters(char))
-            return (lst,await self.specialCharacters(char))
+            mod = await self.specialCharacters(char)
+            lst.pop(0)# elimnamos por fin 'r'
+            return (lst,mod)
         listApprs = [n for n in await self.countCoincidence(lst)]
-        print('apprsCOUNT',listApprs,'LIST',lst)
+        #print('apprsCOUNT',listApprs,'LIST',lst)
         if listApprs[0][0] == 96:
             char,apprs = listApprs[0]
-            print('APC LL',listApprs)
+            #print('APC LL',listApprs)
             mod = await self.specialCharacters(char,apprs)
             return (listApprs[1],mod)
         for x in listApprs:
@@ -143,14 +145,21 @@ class Generator:
             #listApprs = [n for m in lst for n in await self.countCoincidence(lst)]
             #if (rs:=dds.get(x,None)) != None:
             #    print('edrsss',rs,listApprs)'''
+    async def LoadMod(self,character,module):
+        self.lddata = LoadData(module)
+        pass
+
+
+        
     async def generateNotNuddlesData(self,lst):
-        print('not nuddle',lst)
-        print('apprs',[ n for n in await self.countCoincidence(lst)])
+        #print('not nuddle',lst)
+        print('apprs',await self.getModules(lst))
+    
     async def generateNuddles(self,lst):
         #print('lstt',lst)
         for x in lst:
-            
-            print(await self.getModules(x))
+            ...
+            print('nnudle',await self.getModules(x))
         #apprs = [n for m in lst for n in await self.countCoincidence(m)]
         #print('apprs nuddles',apprs)
     async def checkNuddles(self,lst):
@@ -172,14 +181,14 @@ class Generator:
                     await self.generateNuddles(n)
                     idn = id(n)
                 #print('nuddle',lst)
-            '''
+
             else:
 
                 if idlst != id(lst):
                     await self.generateNotNuddlesData(lst)
                     idlst = id(lst)
                     #self.lddata.lst = 
-                continue'''
+                continue
     async def main(self):
         print('starting to generate data'.center(70,'='))
         print(self.chainList)
