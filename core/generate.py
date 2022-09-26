@@ -55,9 +55,9 @@ class Generator(LoadData):
     async def checkFourtyOne(self,listApprs,mod,idx=[1,-1],eidx=[1]):
         #print('appp',listApprs)
         if listApprs[-1][0] == 43:
-                return ((listApprs[idx[0]],listApprs[idx[1]]),mod)#1,-1
+            return ((listApprs[idx[0]],listApprs[idx[1]]),mod)#1,-1
         else:
-                return ((listApprs[eidx[0]],1),mod)# al resultado se le restara un 1 (1)
+            return ((listApprs[eidx[0]],(43,1)),mod)# al resultado se le restara un 1 (1)
     async def getModules(self,lst):
         '''
         funcion destinada a obtener el nombre del modulo dependiendo de la lista
@@ -72,10 +72,13 @@ class Generator(LoadData):
             #print('choice',lst)
             
             return (lst,self.modules.get(40))
-        elif self.chrInList(lst):
-            char = lst[0]
-            mod = await self.specialCharacters(char)
-            lst.pop(0)# elimnamos por fin 'r'
+        elif self.chrInList(lst) or self.hashLists.get(hash := self.getHash(lst),None):
+            if lst[0] == 'r':
+                char = lst[0]
+                mod = await self.specialCharacters(char)
+                lst.pop(0)# elimnamos por fin 'r'
+            else:
+                mod = self.hashLists.get(hash)
             return (lst,mod)
         listApprs = [n for n in await self.countCoincidence(lst)]
         #print(listApprs,lst)
@@ -86,7 +89,7 @@ class Generator(LoadData):
             mod = await self.specialCharacters(char,apprs)
             return await self.checkFourtyOne(listApprs,mod)
         elif listApprs[-1][0] == 43:
-            print('OPL',listApprs,lst)
+            #print('OPL',listApprs,lst)
             mod = [self.modules.get(listApprs[0][0])]# se requiere una lista
             # el modulo sera 64 o algun otro codigo al no tener ningun 96 
             #char,apprs = listApprs
@@ -101,7 +104,7 @@ class Generator(LoadData):
             if md == None:
                 print(f'ALERTA: no se pudo cargar el modulo para el valor {char} insertando valor por defecto')
                 md = DEFAULT_DCT.get('default')
-                print(md,x)
+                #print(md,x)
             return (x,md)
     async def loadMod(self,character,module):
         #self.lddata = LoadData(module)
@@ -127,13 +130,6 @@ class Generator(LoadData):
             yield self.getModules(x)
         #apprs = [n for m in lst for n in await self.countCoincidence(m)]
         #print('apprs nuddles',apprs)
-    async def cycle(self,function,iterations:int,*args):
-        '''
-        fucion destinada a llamar una n cantidad de veces 
-        una funcion y devolver el resultado
-        '''
-        for x in range(0,iterations + 1):
-            yield function(*args)
     def getHash(self,element,q=101,d=256):
         '''
         funcion destinada a crear un hash nuevo de una lista
@@ -166,7 +162,8 @@ class Generator(LoadData):
                 
                 '''
                 #96 64 etc 43
-                #print('nt',element,item,idx)
+                #print('\nnt',element)
+                #await asyncio.sleep(3)
                 num,cot = element[0][1]
                 cot -= 1# restamos uno para que se acceda al modulo
                 # especificado ya que se cuenta desde cero
@@ -196,6 +193,7 @@ class Generator(LoadData):
                 
                 para ello checaremos si su hash es igual a alguno de los que existen en el DEFAULT_DCT
                 '''
+                #print(element)
                 #print(element[-1].__hash__(),DEFAULT_DCT['hashes'].keys(),True)
                 if key := DEFAULT_DCT['hashes'].get(element[-1].__hash__(),None):
                     #print(element,key,'ky')
@@ -224,6 +222,8 @@ class Generator(LoadData):
                             #print(self.createNewHash(element[0]),'ELEMEEEENT')
 
                             if not(self.hashLists.get(hash:=self.getHash(element[0]),None)):
+                                #await asyncio.sleep(3)
+                                #print(element)
                                 # nos cercioramos que no exista el hash en la lista
                                 # ya que esta funcion se mandara a llamar cada
                                 # vez que se procesen los datos 
@@ -233,14 +233,18 @@ class Generator(LoadData):
                                 })
                                 #print('nx',hash)
                                 #await asyncio.sleep(3)
+                                #element[0].insert(0,'r')
                                 yield next(self.hashLists.get(hash))# devolveremos el primer valor
                             #print(self.hashLists)
-                            res = self.hashLists.get(self.getHash(element[0]),None)
+                            #print(element)
+                            #await asyncio.sleep(3)
+                            #res = self.hashLists.get(self.getHash(element[0]),None)
+                            #element[0].insert(0,'r')
                             #await asyncio.sleep(3)
                             #nx = next(res)
                             #print('nxr',nx)
                             #await asyncio.sleep(3)
-                            yield next(res)# obtenemos el siguiente valor
+                            yield next(self.hashLists.get(self.getHash(element[0]),None))# obtenemos el siguiente valor
                             #yield ''
                         case 'characters':
                             yield function(element[0])
@@ -287,26 +291,11 @@ class Generator(LoadData):
             if isinstance(n,list):
                 # detectamos si es un dato anidado
                 if idn != id(n):
-                    #print('nuddles')
+                    #print('nuddles',n)
                     idn = id(n)
                     self.nuddleElement = True
-                    #self.resps.append([await x async for x in self.generateNuddles(n)])
-                    #await self.getModules(n)
-                    
-                    #print(await self.generate([await x async for x in self.generateNuddles(n)]))
-                    #return self.generate
-                    #print('n element',n)
                     async for element in self.generate((await sx async for sx in self.generateNuddles(n))):
                         yield element# aqui juntaremos el elemento generado para despues concatenar todo
-                    #    if element
-                    #print([  gen async for gen in self.generate((await sx async for sx in self.generateNuddles(n)))])
-                    #print([ w async for w in  self.generate((await x async for x in self.generateNuddles(n)),item=n,idx=idx)])
-                    #print('resps',resps)
-                    #yield [ emp async for element in self.generateNuddles(n) async for res in element async for emp in res]
-                    
-                    
-                    #print('nuddle',lst)
-                    #cnudle += 1
 
             else:
 
@@ -315,8 +304,10 @@ class Generator(LoadData):
                     idlst = id(lst)
                     #print(await self.generate(self.generateNotNuddlesData(lst)))
                     nod =  self.generateNotNuddlesData(lst)
+                    #print(lst)
                     async for k in self.generate(nod):
-                        yield k#'value',k,'element',lst,nod)
+                        #print(k)
+                        yield k
                     #print([w async for w in self.generate(self.generateNotNuddlesData(lst),n,idx)])
                     #await self.generate(self.generateNotNuddlesData(lst),item=n,idx=idx)
                     #self.lddata.lst = 
@@ -334,19 +325,35 @@ class Generator(LoadData):
         # check nuddles se encargara de activarla cada que sea necesario
         #iterRows = 0:
         #print('iteration',iterRows)
-        for x in self.chainList:
-            self.resps = []# por cada item se vuelve a resetear la lista
-            self.nuddleElement = False
-            # desactibamos nuddleFlag
-            if isinstance(x,list):
-                #await asyncio.sleep(0.5)
-                idn = 0
+        ops = open('tests.txt','w+')
+        for itm in trange(0,self.rows):
+            for x in self.chainList:
                 #print(x)
-                async for res in self.checkNuddles(x):
-                    if self.nuddleElement:
-                        self.resps.append(res)
-                        print('res',res)
-                print(self.resps)
+                self.resps = []# por cada item se vuelve a resetear la lista
+                self.nuddleElement = False
+                # desactibamos nuddleFlag
+                if isinstance(x,list):
+                    #await asyncio.sleep(0.5)
+                    idn = 0
+                    #print(x)
+                    async for res in self.checkNuddles(x):
+                        #print(res)
+                        if self.nuddleElement:
+                            #print(True)
+                            self.resps.append(res)
+                            #print('res',res)
+                        else:
+                            ops.write(str(res) + '\n')
+                    smstr = ''
+                    for concat in self.resps:
+                        #print('con',concat)
+                        smstr += ' '
+                        smstr += str(concat)
+                    #print('concat',smstr,self.resps)
+                    
+                    if smstr != '':
+                        ops.write(smstr + '\n')
+                    
         """_summary_
         EL RESULTADO DE ESTE CODIGO ARROJA
             [43, 43, 43, 64, 64, 64, 64]
