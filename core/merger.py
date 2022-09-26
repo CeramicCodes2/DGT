@@ -1,5 +1,4 @@
 import csv
-from email.policy import default
 from json import loads
 from inspect import isfunction
 from os import getcwd,walk
@@ -7,6 +6,7 @@ from os.path import join,isfile
 from random import randint,choice
 from secrets import randbits
 from itertools import zip_longest
+from . import Style,Fore
 from uuid import uuid4
 import asyncio
 DEFAULT_DCT = {
@@ -218,11 +218,27 @@ class DataWriter:
 
     '''
     def __init__(self,filename,outputFormat) -> None:
-        pass
+        self.filename = open(filename)
         #return (headers,data)
+    def loadFilename(self):
+        '''
+        checa si el archivo confiene algo y arroja una advertencia si esa si
+        '''
+        if self.filename.read():
+            print(f'{Fore.YELLOW} ALERTA: {Fore.RED} el archivo contiene informacion')
+            pod = input(f'{Fore.LIGHTRED_EX} desea proceder (y/n) \n {Fore.LIGHTYELLOW_EX}$>')[0]# obtenemos solo el primer caracter
+            if pod == 'y':
+                self.filename.seek(0)
+            else:
+                opod = input(f"{Fore.LIGHTGREEN_EX} ingrese otro archivo de salida: {Fore.CYAN}")
+                self.filename = open(opod,'w+')
+                return self.loadFilename()# recursivo
+        
+
+            
     async def toSql(self,tableName:str,convert2Str:bool=False,insertNewFile:bool=False):
         '''
-        esta funcion se llamara por cada dato que se procesara ejemplo
+        esta funcion se llamara por cada dato que se procesara ejemplo:
 
         'ivan',11 etc se habra llamado 2 veces
 
@@ -233,6 +249,8 @@ class DataWriter:
         insertNewFile -> cada que sea true se insertara una nueva linea en el archivo es decir un \\n \n
 
         '''
+        self.loadFilename()
+        
         pass
 #print(DEFAULT_DCT.get('names')[0])
 #test = LoadData(lst=[DEFAULT_DCT.get('names')[0]])

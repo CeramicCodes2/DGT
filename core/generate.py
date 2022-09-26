@@ -1,5 +1,5 @@
 import asyncio
-from colorama import Fore,Style
+from . import Fore,Style
 from tqdm.asyncio import trange
 #from inspect import isfunction
 
