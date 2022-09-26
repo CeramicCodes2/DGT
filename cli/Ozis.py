@@ -5,7 +5,8 @@ from typing import final
 from ..core.merger import DEFAULT_DCT,LoadData
 from ..core.generate import Generator
 from ..core.data import kwds
-
+from colorama import init
+init()
 class Oasis:
     '''
     clase encargada de apartir de los datos que el usuario introduzca llamar a loaddata con datos necesarios
@@ -95,18 +96,24 @@ class Oasis:
 
     https://youtu.be/WCCovrKvAtU
     '''
-    def __init__(self,string:str):
+    def __init__(self,string:str,rows=1):
         self.clearList = lambda lst,start,end: [d for d in lst if not((d == start) or (d == end))]
         self.clearSpaces = lambda lst: [x for x in lst if x != '']
         self.string = string
+        self.rows = rows
         self.string += ' '
         self.loadModules = []
         self.kwds = kwds
+        self.__separator = ','
         self.procesateString()
         #self.loadMod(data=self.jop)
         
         #print(self.normalMarker,self.markerPersonal)
-
+    @property
+    def setSeparator(self): return self.__separator
+    @setSeparator.setter
+    def setSeparator(self,sep):
+        self.__separator = sep
     @staticmethod
     def findCoincidence(ccNum,number,codecs):
         ps = []
@@ -373,6 +380,7 @@ class Oasis:
         #print('copy list',cpy)
         self.loadMod(mods,ncodecs)# cargamos los modulos
         #self.lddata.generateCoords.update({'codecs':ncodecs})
+        self.lddata.setSeparator = self.setSeparator
         self.lddata.run()
         # '''
     def decode(self,ncodecs):
@@ -457,9 +465,9 @@ class Oasis:
         #print(ncodecs,data)
         #print(dct)
         #print('DCT DISTTT', DEFAULT_DCT.get(self.kwds.get(42)))
-        self.lddata = Generator(dct,ncodecs)
+        self.lddata = Generator(dct,ncodecs,self.rows)
         #self.lddata = LoadData(list(self.loadModules))
-ps = Oasis('``+++@@@@ [`+++@@@@@@@@ ### ****]  ****** ######   [``@@@ ****] {112~3333|3}  ### [(chardet | cyna) ****]  [(cypher | control)] [{72~3}] [{314~200}]')
+#ps = Oasis('[`@@@ (hello | world) (astra) {1 ~ 23 | 1}]',rows=4)
 # [ [[96,64, 64, 64, 64, 64],[94,94,94,94,94]],[35,35,35,35,35,35,35,35],[[]]]] [`@@@@@ ^^^^^] ######## [@@@@@@ $$$$$$$]
 # [12 ~ 2000]
 # [[2,64,64],[12,12,12,12]],[44,4,4,4,4,4],[]
