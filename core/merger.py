@@ -67,6 +67,7 @@ class LoadData:
     """
     def __init__(self,lst:list,dct:dict=DEFAULT_DCT):
         #print(True)
+        self.__separator = ','
         self.lst = lst
         # lista con nombres de las claves de
         # los ficheros de datos a cargar
@@ -79,6 +80,14 @@ class LoadData:
         #self.load()
         # generateCoords son los datos que usara el generador para generar
         # las cadenas
+    @property
+    def setSeparator(self):
+        return self.__separator
+    @setSeparator.setter
+    def setSeparator(self,sep):
+        if sep == '':
+            raise NameError('EL SEPARADOR NO PUEDE SER UNA CADENA SIN CARACTERES')
+        self.__separator = sep
     @property 
     def setColumnNumber(self) -> int:
         return self.__columnNumber
@@ -126,7 +135,7 @@ class LoadData:
         se puede especificar la columna a leer 
         '''
         async for mod in self.loadder(module):
-            md = csv.reader(mod)
+            md = csv.reader(mod,delimiter=self.setSeparator,quotechar='\n')
             for n,x in enumerate(md):
                 if n == campidx:
                     #print(x)
