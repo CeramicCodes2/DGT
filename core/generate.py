@@ -78,7 +78,9 @@ class Generator(LoadData):
                 mod = await self.specialCharacters(char)
                 lst.pop(0)# elimnamos por fin 'r'
             else:
-                mod = self.hashLists.get(hash)
+                #print('OTHERRR')
+                mod = self.modules.get(123)
+                #print(mod)
             return (lst,mod)
         listApprs = [n for n in await self.countCoincidence(lst)]
         #print(listApprs,lst)
@@ -234,17 +236,16 @@ class Generator(LoadData):
                                 #print('nx',hash)
                                 #await asyncio.sleep(3)
                                 #element[0].insert(0,'r')
-                                yield next(self.hashLists.get(hash))# devolveremos el primer valor
-                            #print(self.hashLists)
-                            #print(element)
-                            #await asyncio.sleep(3)
-                            #res = self.hashLists.get(self.getHash(element[0]),None)
-                            #element[0].insert(0,'r')
-                            #await asyncio.sleep(3)
-                            #nx = next(res)
-                            #print('nxr',nx)
-                            #await asyncio.sleep(3)
-                            yield next(self.hashLists.get(self.getHash(element[0]),None))# obtenemos el siguiente valor
+                                try:
+                                    res = next(self.hashLists.get(hash))
+                                except StopIteration:
+                                    res = 0
+                                yield res# devolveremos el primer valor
+                            try:
+                                res = next(self.hashLists.get(self.getHash(element[0]),None))# obtenemos el siguiente valor
+                            except StopIteration:
+                                res = 0
+                            yield res
                             #yield ''
                         case 'characters':
                             yield function(element[0])
@@ -253,6 +254,7 @@ class Generator(LoadData):
                             pass
                         
                     pass
+                
                 #yield element
                 #print('ops',element)
                 # usaremos los metodos magicos __hash__ en caso de que sea una funcion para
@@ -343,7 +345,7 @@ class Generator(LoadData):
                             self.resps.append(res)
                             #print('res',res)
                         else:
-                            ops.write(str(res) + '\n')
+                            ops.write(str(res) + ' ')
                     smstr = ''
                     for concat in self.resps:
                         #print('con',concat)
@@ -352,7 +354,8 @@ class Generator(LoadData):
                     #print('concat',smstr,self.resps)
                     
                     if smstr != '':
-                        ops.write(smstr + '\n')
+                        ops.write(smstr)
+                    ops.write('\n')
                     
         """_summary_
         EL RESULTADO DE ESTE CODIGO ARROJA
