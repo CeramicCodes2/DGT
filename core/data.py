@@ -6,3 +6,8 @@ kwds = {
             123:'abso',
             40:'characters'
 }
+fileTypes = [
+    'json',
+    'csv',
+    'sql'
+]
