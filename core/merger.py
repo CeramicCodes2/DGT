@@ -1,5 +1,7 @@
 import csv
+from email.policy import default
 from json import loads
+from inspect import isfunction
 from os import getcwd,walk
 from os.path import join,isfile
 from random import randint,choice
@@ -12,11 +14,20 @@ DEFAULT_DCT = {
         [ join(x,name) for x,y,z in walk(join(getcwd(),'DGT','dataBase')) for name in z if name.startswith('names')],
     'eage':  lambda startEage,endEage: randint([startEage,endEage]),
     'numbers': lambda lenght: randbits(lenght),
-    'guid':lambda numberOfuuid: [ uuid4() for x in range(0,numberOfuuid)],
-    'abso':lambda x,y,n: [n for n in range(x,y+1,n)],
+    'guid':lambda : uuid4(),
+    'abso':lambda x,y,n: range(x,y+1,n),
     'characters':lambda characters: choice(characters),
-    'default':''
+    'default':'',
 }
+(lambda : DEFAULT_DCT.update({'hashes':dict((item.__hash__(),key) for key,item in DEFAULT_DCT.items() if isfunction(item))}))()
+
+
+
+ 
+
+
+ 
+
 """
 https://www.youtube.com/watch?v=MzC19OfZAOo
 dct creara un diccionatio en base a los archivos que inicien 
@@ -104,12 +115,40 @@ class LoadData:
         '''
         async for x in self.readder(modules=modules,filter=True):
             yield function(x)
+    async def randomIndex(self,module:list):
+        campidx = randint(0,await self.getModuleRows(module))# leemos una fila aleatoria
+        return await self.readIndex(module,campidx)
+        
+        
+    async def readIndex(self,module:list,campidx):
+        '''
+        funcion destinada a leer un indice en especifico del archivo
+        se puede especificar la columna a leer 
+        '''
+        async for mod in self.loadder(module):
+            md = csv.reader(mod)
+            for n,x in enumerate(md):
+                if n == campidx:
+                    #print(x)
+                    return x[self.setColumnNumber]# devolvemos el indice
+            
+        
     async def readRowData(self,modules):
         #print('cols')
-        async for x in self.readder(modules=modules,rows=self.setColumnNumber):
-            print(x)
+        #async for x in self.readder(modules=modules,rows=self.setColumnNumber):
+        #    yield x
+        #    ...#print(x)
+        yield self.readder(modules=modules,rows=self.setColumnNumber)
+    async def getModuleRows(self,module:list) -> int:
+        '''
+        devielve el numero de filas de uno o mas modulos
+        '''
+        async for x in self.loadder(module):
+            mod = csv.reader(x)
+            return len(next(mod)) - 1
+            
     async def readder(self,modules,filter=False,rows=None):
-        print('rows',rows)
+        #print('rows',rows)
         async for x in self.loadder(modules):
             mod = csv.reader(x)
             line_counter = 0
@@ -159,6 +198,10 @@ class LoadData:
                 data = x
             line_counter += 1
             yield (headers,data)'''
+            
+class DataWriter:
+    def __init__(self,filename,outputFormat) -> None:
+        pass
         #return (headers,data)
 #print(DEFAULT_DCT.get('names')[0])
 #test = LoadData(lst=[DEFAULT_DCT.get('names')[0]])

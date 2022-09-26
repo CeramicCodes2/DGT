@@ -1,12 +1,14 @@
-from ast import Load
 import asyncio
-from inspect import isfunction
+from colorama import Fore,Style
+from tqdm.asyncio import trange
+#from inspect import isfunction
 
 from DGT.core.merger import DEFAULT_DCT, LoadData
 
 class Generator(LoadData):
-    def __init__(self,modules,chainList) -> None:
+    def __init__(self,modules,chainList,rows) -> None:
         self.modules = modules
+        self.rows = rows 
         self.chainList = chainList
         self.controlCharacters = [96,'r',43]
         super().__init__(self,self.modules)
@@ -49,8 +51,12 @@ class Generator(LoadData):
         es un caracter especial 
         '''
         return any([ True if (isinstance(x,str)) and (x in self.controlCharacters) else False for x in lst])
-
-
+    async def checkFourtyOne(self,listApprs,mod,idx=[1,-1],eidx=[1]):
+        #print('appp',listApprs)
+        if listApprs[-1][0] == 43:
+                return ((listApprs[idx[0]],listApprs[idx[1]]),mod)#1,-1
+        else:
+                return ((listApprs[eidx[0]],1),mod)# al resultado se le restara un 1 (1)
     async def getModules(self,lst):
         '''
         funcion destinada a obtener el nombre del modulo dependiendo de la lista
@@ -71,15 +77,22 @@ class Generator(LoadData):
             lst.pop(0)# elimnamos por fin 'r'
             return (lst,mod)
         listApprs = [n for n in await self.countCoincidence(lst)]
+        #print(listApprs,lst)
         #print('apprsCOUNT',listApprs,'LIST',lst)
         if listApprs[0][0] == 96:
             char,apprs = listApprs[0]
             #print('APC LL',listApprs)
             mod = await self.specialCharacters(char,apprs)
-            if listApprs[-1][0] == 43:
-                return ((listApprs[1],listApprs[-1]),mod)
-            else:
-                return ((listApprs[1],1))# al resultado se le restara un 1
+            return await self.checkFourtyOne(listApprs,mod)
+        elif listApprs[-1][0] == 43:
+            print('OPL',listApprs,lst)
+            mod = [self.modules.get(listApprs[0][0])]# se requiere una lista
+            # el modulo sera 64 o algun otro codigo al no tener ningun 96 
+            #char,apprs = listApprs
+            return await self.checkFourtyOne(listApprs,mod,idx=[0,-1],eidx=[0])# seguramente al no haber 96 se escogera el modulo 0
+        #elif listApprs[-1][0]:
+        #    char,apprs = listApprs[0]
+        #    return await self.checkFourtyOne(listApprs,await self.specialCharacters(char,apprs))
         for x in listApprs:
             char,apprs = x
             #print('pre',char)
@@ -87,6 +100,7 @@ class Generator(LoadData):
             if md == None:
                 print(f'ALERTA: no se pudo cargar el modulo para el valor {char} insertando valor por defecto')
                 md = DEFAULT_DCT.get('default')
+                print(md,x)
             return (x,md)
     async def loadMod(self,character,module):
         #self.lddata = LoadData(module)
@@ -102,52 +116,147 @@ class Generator(LoadData):
         #await self.load()
         #await self.load('readRowData',self.modules)
         #print('nuddle',await self.getModules(lst))
-        return await self.getModules(lst)
+        yield await self.getModules(lst)
         
     
     async def generateNuddles(self,lst):
         #print('lstt',lst)
         for x in lst:
+            
             yield self.getModules(x)
         #apprs = [n for m in lst for n in await self.countCoincidence(m)]
         #print('apprs nuddles',apprs)
-    async def generate(self,lst):
+    async def cycle(self,function,iterations:int,*args):
+        '''
+        fucion destinada a llamar una n cantidad de veces 
+        una funcion y devolver el resultado
+        '''
+        for x in range(0,iterations + 1):
+            yield function(*args)
+    async def generate(self,lst:iter): #,item,idx):
         '''
         generador de datos
         se suministrara una lista con el caracter,coincidencias y su modulo de ejecucion
+        
         '''
-        for element in lst:
-            if isinstance(element,tuple):
-                elm = element[0]
-                if isinstance(elm,tuple):
-                    # concat 64
-                    if elm[1][0] == 43:
-                        await super().readRowData()
-                        elm[1][1]# se seleccionara la columna que se usara de los archivos
-                else:
+        async for element in lst:
+            #print(element)
+            if not(isinstance(element[0][0],int) or isinstance(element[0][0],str)):
+                '''
+                solo procesamos datos con modulos o anidados
+                ejemplo 
+                nt (((64, 4), (43, 3)), ['C:\\Users\\ispi2\\OneDrive\\Documents\\projects\\DGT\\DGT\\dataBase\\names_estados.csv'])
+                
+                '''
+                #96 64 etc 43
+                #print('nt',element,item,idx)
+                num,cot = element[0][1]
+                cot -= 1# restamos uno para que se acceda al modulo
+                # especificado ya que se cuenta desde cero
+                if num == 43:
+                    #print(element[-1])
+                    
+                    #super().setColumnNumber = cot# colocamos la columna a usar
+                    if len(element[-1]) == 2:
+                        
+                        element[-1].pop(-1)# eliminamos el 64 que esta al final
+                    #print(element[-1])
+                    #print(cot)
+                    rows = await super().getModuleRows(element[-1])
+                    
+                    #print(rows,cot,element)
+                    if rows < cot:
+                        raise NameError(f'se esta accediendo a una columna inexistente el archivo {element[-1]} solo tiene {rows + 1} y se quiere acceder a {cot + 1}')
+                    self.setColumnNumber = cot# colocamos la columna a usar
+                    #print(self.setColumnNumber)
+                    #print(await super().randomIndex(element[-1]))
+                    #print('IMPORTANT',num,cot,element,await super().randomIndex(element[-1]))
+                    yield await super().randomIndex(element[-1])#super().readRowData(element[-1])# el modulo es el ultimo elemento
+                #print(element[0][1][0],element[0][1][1])
+            else:
+                '''
+                procesamos datos no anidados
+                
+                para ello checaremos si su hash es igual a alguno de los que existen en el DEFAULT_DCT
+                '''
+                #print(element[-1].__hash__(),DEFAULT_DCT['hashes'].keys(),True)
+                if key := DEFAULT_DCT['hashes'].get(element[-1].__hash__(),None):
+                    #print(element,key,'ky')
+                    function = element[-1]
+                    match key:
+                        #case 'names': no habra case names por que ya lo procesamos 
+                        case 'eage':
+                            ...
+                        case 'numbers':
+                            # mandamos a llamar y retornamos valor
+                            yield function(element[0][1])
+                        case 'guid':
+                            yield function()
+                        case 'abso':
+                            if len(element[0]) <= 2:
+                                element[0].append(1)# {10 ~ 300} -> {10 ~ 300 | 1}
+                                # la funcion recibe 3 parametros y se le esta dando solo 2 por ello agregamos 
+                                # el salto 
+                            yield function(*element[0])
+                        case 'characters':
+                            yield function(element[0])
+                        case _:
+                            # default
+                            pass
+                        
                     pass
+                #yield element
+                #print('ops',element)
+                # usaremos los metodos magicos __hash__ en caso de que sea una funcion para
+                
+                
+                # comprobar si no es un rango
+                '''
+                if isfunction(element[-1]) and (len(element) -1 < 2) and not(isinstance(element[0][0],str)):
+                    #return element[-1]
+                    print(element)
+                #    print(element)#(element[0][-1]))
+                else:
+                    print(element)
+                #    print(element)
+                #    #print(element[-1](*element[::-1]))'''
+    def concatData(self,lst):
+        pass     
     async def checkNuddles(self,lst):
         '''
         funcion destinada a buscar datos  anidados y no anidados
         dependiendo de ello llamara funciones destinadas a generar los datos
+        esta funcion retornara un solo valor dependiendo de la lista parseada ejemplo
+        [96,64,64,64] o lo que seria
+        '`@@@' -> (se cargo el modulo names_jordan) -> hello
+        
         '''
         #self.lddata = LoadData([],DEFAULT_DCT)
         #cnudle = 0
         idlst = 0
         #print('er',rlist)
         for idx,n in enumerate(lst):
-
+            
             idn = 0
             #print(n)
             
             if isinstance(n,list):
                 # detectamos si es un dato anidado
                 if idn != id(n):
-                    print('nuddles',n)
+                    #print('nuddles')
                     idn = id(n)
-                    
+                    self.nuddleElement = True
                     #self.resps.append([await x async for x in self.generateNuddles(n)])
-                    await self.generate([await x async for x in self.generateNuddles(n)])
+                    #await self.getModules(n)
+                    
+                    #print(await self.generate([await x async for x in self.generateNuddles(n)]))
+                    #return self.generate
+                    #print('n element',n)
+                    async for element in self.generate((await sx async for sx in self.generateNuddles(n))):
+                        yield element# aqui juntaremos el elemento generado para despues concatenar todo
+                    #    if element
+                    #print([  gen async for gen in self.generate((await sx async for sx in self.generateNuddles(n)))])
+                    #print([ w async for w in  self.generate((await x async for x in self.generateNuddles(n)),item=n,idx=idx)])
                     #print('resps',resps)
                     #yield [ emp async for element in self.generateNuddles(n) async for res in element async for emp in res]
                     
@@ -158,30 +267,76 @@ class Generator(LoadData):
             else:
 
                 if idlst != id(lst):
-                    print('not nuddles',lst)
+                    #print('not nuddles',lst)
                     idlst = id(lst)
-                    #self.resps.append(await self.generateNotNuddlesData(lst))
+                    #print(await self.generate(self.generateNotNuddlesData(lst)))
+                    nod =  self.generateNotNuddlesData(lst)
+                    async for k in self.generate(nod):
+                        yield k#'value',k,'element',lst,nod)
+                    #print([w async for w in self.generate(self.generateNotNuddlesData(lst),n,idx)])
+                    #await self.generate(self.generateNotNuddlesData(lst),item=n,idx=idx)
                     #self.lddata.lst = 
                     #cnudle += 1
                 continue
         # se termino de llenar la lista
         # ahora podremos generar los datos
-        #await self.generate()
     async def main(self):
-        print('starting to generate data'.center(70,'='))
-        #print(self.chainList)
-        #print(self.modules)
-        #pool = []
+        print(f'{Fore.GREEN} starting to generate data {Style.RESET_ALL}'.center(70,'='))
+        print(Fore.CYAN)
+        gen = 0
+        self.nuddleElement = False
+        # nuddle element sera una bandera que se activara cada que se tenga un valor anidado
+        # esta se desactivara por cada elemento por lo que el meotod
+        # check nuddles se encargara de activarla cada que sea necesario
+        #iterRows = 0:
+        #print('iteration',iterRows)
         for x in self.chainList:
-            #self.resps = []# por cada item se vuelve a resetear la lista
+            self.resps = []# por cada item se vuelve a resetear la lista
+            self.nuddleElement = False
+            # desactibamos nuddleFlag
             if isinstance(x,list):
+                #await asyncio.sleep(0.5)
                 idn = 0
-                #print(x)
-                await self.checkNuddles(x)
-                #pool.append(self.resps)
+                print(x)
+                async for res in self.checkNuddles(x):
+                    if self.nuddleElement:
+                        self.resps.append(res)
+                print(self.resps)
+        """_summary_
+        EL RESULTADO DE ESTE CODIGO ARROJA
+
+            [43, 43, 43, 64, 64, 64, 64]
+            OPL [(64, 4), (43, 3)] [43, 43, 43, 64, 64, 64, 64]
+            []
+            [[[64, 64, 64, 64, 64, 64, 64, 64], [35, 35, 35], [42, 42, 42, 42]]]
+            [2, UUID('ea1ae6da-25ce-4652-8c21-a1f3e77d3741')]
+            [42, 42, 42, 42, 42, 42]
+            []
+            [35, 35, 35, 35, 35, 35]
+            []
+            [[[43, 64, 64, 64], [42, 42, 42, 42]]]
+            OPL [(64, 3), (43, 1)] [43, 64, 64, 64]
+            ['Chiapas', UUID('fb926f8d-8e01-4dca-b539-6a318bef99da')]
+            ['r', 112, 333, 3]
+            []
+            [35, 35, 35]
+            []
+            [[['chardet', 'cyna'], [42, 42, 42, 42]]]
+            ['cyna', UUID('9aa3d105-fedd-491a-8b39-a25fcb86c95b')]
+            [[['cypher', 'control']]]
+            ['cypher']
+            [[['r', 3, 100]]]
+            [range(3, 101)]
+            [[['r', 20, 200, 2]]]
+            [range(20, 201, 2)]
+        POR LO QUE SERA NECESARIO 
+        EN EL CASO DE LOS RANGOS ESTRAERLOS Y CUANDO LLEGE EL MOMENTO DE INSERTAR UN NUEVO
+        VALOR SALTAR A LA CORRUTINA QUE DEVOLVERA EL SIGUIENTE VALOR DEL RANGO
+        
+
+        """
                 #print(self.resps)
-                #async for element in self.checkNuddles(x):
-        #print(pool)   
-        #print([await x for n in self.chainList() async for x in self.checkNuddles(n)])
+                #print('fill list',self.resps)
+                
         
     
