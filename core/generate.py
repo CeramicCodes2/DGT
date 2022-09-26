@@ -127,7 +127,7 @@ class Generator:
         #print('apprsCOUNT',listApprs,'LIST',lst)
         if listApprs[0][0] == 96:
             char,apprs = listApprs[0]
-            print('APC LL',listApprs)
+            #print('APC LL',listApprs)
             mod = await self.specialCharacters(char,apprs)
             if listApprs[-1][0] == 43:
                 return ((listApprs[1],listApprs[-1]),mod)
