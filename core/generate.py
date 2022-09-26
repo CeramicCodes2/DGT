@@ -10,6 +10,7 @@ class Generator(LoadData):
         self.modules = modules
         self.rows = rows 
         self.chainList = chainList
+        self.hashLists = dict()
         self.controlCharacters = [96,'r',43]
         super().__init__(self,self.modules)
     def run(self):
@@ -133,6 +134,22 @@ class Generator(LoadData):
         '''
         for x in range(0,iterations + 1):
             yield function(*args)
+    def getHash(self,element,q=101,d=256):
+        '''
+        funcion destinada a crear un hash nuevo de una lista
+        
+        para ello usaremos numeros primos y la forma de crear hashes de el algoritmo
+        de krap
+        
+        fuentes:
+            https://www.geeksforgeeks.org/rabin-karp-algorithm-for-pattern-searching/
+        '''
+        p = 0# valor del hash
+        #d = 256 numero de caracteres en el alfabeto 
+        for item in element:
+            p = (d * p + item)%q
+        return p 
+        
     async def generate(self,lst:iter): #,item,idx):
         '''
         generador de datos
@@ -194,10 +211,37 @@ class Generator(LoadData):
                             yield function()
                         case 'abso':
                             if len(element[0]) <= 2:
+                                # esta condicion solo se ejecutara en la primer iteracion
+                                # ya que toda lista de rangos despues de la primer iteracion
+                                # sera mayor o igual a 2 
+                                #print(True)
+                                #await asyncio.sleep(0.5)
                                 element[0].append(1)# {10 ~ 300} -> {10 ~ 300 | 1}
                                 # la funcion recibe 3 parametros y se le esta dando solo 2 por ello agregamos 
                                 # el salto 
-                            yield function(*element[0])
+                            # creamos un diccionario que enlazara cada hash de una lista con
+                            # un rango
+                            #print(self.createNewHash(element[0]),'ELEMEEEENT')
+
+                            if not(self.hashLists.get(hash:=self.getHash(element[0]),None)):
+                                # nos cercioramos que no exista el hash en la lista
+                                # ya que esta funcion se mandara a llamar cada
+                                # vez que se procesen los datos 
+                                # si none es true entonces crearemos el hash
+                                self.hashLists.update({
+                                    hash:iter(function(*element[0]))# a;adimos el rango y convertimos en un iterador
+                                })
+                                #print('nx',hash)
+                                #await asyncio.sleep(3)
+                                yield next(self.hashLists.get(hash))# devolveremos el primer valor
+                            #print(self.hashLists)
+                            res = self.hashLists.get(self.getHash(element[0]),None)
+                            #await asyncio.sleep(3)
+                            #nx = next(res)
+                            #print('nxr',nx)
+                            #await asyncio.sleep(3)
+                            yield next(res)# obtenemos el siguiente valor
+                            #yield ''
                         case 'characters':
                             yield function(element[0])
                         case _:
@@ -297,14 +341,14 @@ class Generator(LoadData):
             if isinstance(x,list):
                 #await asyncio.sleep(0.5)
                 idn = 0
-                print(x)
+                #print(x)
                 async for res in self.checkNuddles(x):
                     if self.nuddleElement:
                         self.resps.append(res)
+                        print('res',res)
                 print(self.resps)
         """_summary_
         EL RESULTADO DE ESTE CODIGO ARROJA
-
             [43, 43, 43, 64, 64, 64, 64]
             OPL [(64, 4), (43, 3)] [43, 43, 43, 64, 64, 64, 64]
             []
@@ -333,8 +377,18 @@ class Generator(LoadData):
         EN EL CASO DE LOS RANGOS ESTRAERLOS Y CUANDO LLEGE EL MOMENTO DE INSERTAR UN NUEVO
         VALOR SALTAR A LA CORRUTINA QUE DEVOLVERA EL SIGUIENTE VALOR DEL RANGO
         
-
-        """
+        MODO DE SOLUCION PROPUESTO:
+        
+            QUE SE USE EL HASH DE LA LISTA Y SE CREE DINAMICAMENTE UN DICCIONARIO DE LA FORMA
+            
+            HASH: [RANGE(X,Y,N)]
+            
+            ASI SE RELACIONARA EL HASH CON EL RANGO Y POR CADA OCURRENCIA DEL RANGO
+            SE GENERARA UNA ITERACION NUEVA 
+            
+            TAMBIEN ES NECESARIO A;ADIR UNA EXCEPCION EN CASO DE QUE EL RANGO SEA MENOR
+            A LA CANTIDAD DE DATOS ITERADOS ESPERADOS
+            """
                 #print(self.resps)
                 #print('fill list',self.resps)
                 
