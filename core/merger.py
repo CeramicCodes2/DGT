@@ -209,9 +209,31 @@ class LoadData:
             yield (headers,data)'''
             
 class DataWriter:
+    '''
+    clase destinada a escribir los datos en stream en un formato especifico
+    los formatos que soprotara son 
+        * -> csv
+        * -> json
+        * -> sql
+
+    '''
     def __init__(self,filename,outputFormat) -> None:
         pass
         #return (headers,data)
+    async def toSql(self,tableName:str,convert2Str:bool=False,insertNewFile:bool=False):
+        '''
+        esta funcion se llamara por cada dato que se procesara ejemplo
+
+        'ivan',11 etc se habra llamado 2 veces
+
+        tableName -> nombre de la tabla
+        convert2str -> es una bandera que se pasara por cada dato con ella nos aseguraremos de que si no es necesario convertir a string
+        entonces no se hara y se respetara el hecho de que es un entero
+        ademas si es un string se colocaran ""
+        insertNewFile -> cada que sea true se insertara una nueva linea en el archivo es decir un \\n \n
+
+        '''
+        pass
 #print(DEFAULT_DCT.get('names')[0])
 #test = LoadData(lst=[DEFAULT_DCT.get('names')[0]])
 #test.getFilter = lambda x: x if len(x) <= 6 else False
