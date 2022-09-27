@@ -462,7 +462,7 @@ class Oasis:
         #print('DCT DISTTT', DEFAULT_DCT.get(self.kwds.get(42)))
         self.lddata = Generator(dct,ncodecs,self.rows)
         #self.lddata = LoadData(list(self.loadModules))
-#ps = Oasis('[`@@@ (hello | world) (astra) {1 ~ 23 | 1}]',rows=4)
+ps = Oasis('`+@@@@ [()]',rows=4)
 # [ [[96,64, 64, 64, 64, 64],[94,94,94,94,94]],[35,35,35,35,35,35,35,35],[[]]]] [`@@@@@ ^^^^^] ######## [@@@@@@ $$$$$$$]
 # [12 ~ 2000]
 # [[2,64,64],[12,12,12,12]],[44,4,4,4,4,4],[]

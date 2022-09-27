@@ -11,6 +11,7 @@ class parser:
         self.toSqlParser()
         self.configurationsDataBases()
         self.args = self.parser.parse_args()
+        #self.args.func(self.args)
     def mainParser(self):
         self.parser.add_argument('-r','--rows',help='cantidad de columnas a escribir')
         self.parser.add_argument('-str','--stringChain',help='la cadena de caracteres que se usara para generar los datos')
@@ -21,8 +22,7 @@ class parser:
         self.subparser = self.parser.add_subparsers()
         self.sqlParser = self.subparser.add_parser('sql')
         self.sqlParser.add_argument('-i2str','--intToString',help='convertir numeros enteros a strings',action='store_true')# bandera
-        #self.sqlParser.set_defaults(func=lambda e,s,q: print(e))
-        #print(self.sqlParser.parse_args())
+    
     def configure(*args):
         print(args)
     def configurationsDataBases(self):
@@ -32,6 +32,7 @@ class parser:
         self.configure.add_argument('-down','--download_data',help='descargar datos desde un servidor')
         self.configure.add_argument('-form','--format_databases',help='establecer todas las bases de datos con un delimitador especifico')
         self.configure.set_defaults(func=self.configure)
+        #print(dir(self.configure))
         #self.configure.set_defaults()
     def callModules(self):
         pass
