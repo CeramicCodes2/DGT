@@ -3,7 +3,7 @@ from . import Fore,Style
 from tqdm.asyncio import trange
 #from inspect import isfunction
 
-from DGT.core.merger import DEFAULT_DCT, LoadData
+from DGT.core.merger import DEFAULT_DCT, LoadData,DataWriter
 
 class Generator(LoadData):
     def __init__(self,modules,chainList,rows) -> None:
@@ -317,6 +317,7 @@ class Generator(LoadData):
                 continue
         # se termino de llenar la lista
         # ahora podremos generar los datos
+
     async def main(self):
         print(f'{Fore.GREEN} starting to generate data {Style.RESET_ALL}'.center(70,'='))
         print(Fore.CYAN)
@@ -327,7 +328,9 @@ class Generator(LoadData):
         # check nuddles se encargara de activarla cada que sea necesario
         #iterRows = 0:
         #print('iteration',iterRows)
-        ops = open('tests.txt','w+')
+        writter = DataWriter('test.txt','sql',self.rows)
+        writter.setTableName = 'hello'
+        #ops = open('tests.txt','w+')
         for itm in trange(0,self.rows):
             for x in self.chainList:
                 #print(x)
@@ -345,7 +348,8 @@ class Generator(LoadData):
                             self.resps.append(res)
                             #print('res',res)
                         else:
-                            ops.write(str(res) + ' ')
+                            await writter.toSql(res,itm)
+                            #ops.write(str(res) + ' ')
                     smstr = ''
                     for concat in self.resps:
                         #print('con',concat)
@@ -354,7 +358,7 @@ class Generator(LoadData):
                     #print('concat',smstr,self.resps)
                     
                     if smstr != '':
-                        ops.write(smstr)
+                        await writter.toSql(smstr,itm)
                     ops.write('\n')
                     
         """_summary_

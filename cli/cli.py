@@ -1,6 +1,7 @@
 import argparse
 from ..core.data import fileTypes
 from .Ozis import Oasis
+from colorama import Fore
 class parser:
     """_summary_
     interfaz de usuario base cli para DGT
@@ -42,6 +43,8 @@ class parser:
         self.configure.set_defaults(conf=parser.configure)
         #self.configure.set_defaults()
     def callModules(self):
+        self.banner = open('banner.txt','r')
+        print(f'{Fore.GREEN}' + self.banner.read())
         ...
         #cli = Oasis(self.args.stringChain,rows=self.args.rows)
 

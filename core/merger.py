@@ -6,6 +6,7 @@ from os.path import join,isfile
 from random import randint,choice
 from secrets import randbits
 from itertools import zip_longest
+from tokenize import Name
 from . import Style,Fore
 from uuid import uuid4
 import asyncio
@@ -217,12 +218,17 @@ class DataWriter:
         * -> sql
 
     '''
-    def __init__(self,filename,outputFormat) -> None:
-        self.filename = open(filename)
+    def __init__(self,filename,outputFormat,maxIteration) -> None:
+        self.filename = open(filename,'w+')
+        self.__tableName = 'DEFAULT'
+        self.__dataList = []
+        self.__calculateRows = False
+        self.maxIteration = maxIteration# el numero maximo de iteraciones
+        self.loadFilename()
         #return (headers,data)
     def loadFilename(self):
         '''
-        checa si el archivo confiene algo y arroja una advertencia si esa si
+        checa si el archivo confiene algo y arroja una advertencia si es a si
         '''
         if self.filename.read():
             print(f'{Fore.YELLOW} ALERTA: {Fore.RED} el archivo contiene informacion')
@@ -235,13 +241,90 @@ class DataWriter:
                 return self.loadFilename()# recursivo
         
 
-            
-    async def toSql(self,tableName:str,convert2Str:bool=False,insertNewFile:bool=False):
+    @property
+    def setTableName(self):
+        '''
+        propiedad destinada a fijar el nombre de la tabla en la cual se insertaran los datos
+        '''
+        return self.__tableName
+    @setTableName.setter
+    def setTableName(self,name:str):
+        self.__tableName = name
+    @property
+    def enableCalculateRows(self) -> bool:
+        '''
+        propiedad de una cnstante se usara para habilitar 
+        si se quiere usar la sintaxis para campos calculados
+                
+                insert into hello(campoNoCalculado, ...) values (any, ...);
+
+            recordemos que en una tabla con campos calculados como:
+
+                create table hello(
+                    precio number(3),
+                    iva (number * 0.16)
+                );
+
+                no se puede llenar con la sintaxis:
+
+                insert into hello values (1000,22);
+
+                ya que los campos calculados se llenan solos apartir de los datos que se van insertando por ello se usara esta constante
+                para habilitar la segunda forma de llenado de datos en la funcion
+                toSql 
+
+                al habilitar esta forma de llenar los datos sera necesario suministrar una lista con el nombre de los campos
+
+                la lista tiene que tener un largo total a los datos pasados en el string de parseado es decir:
+
+
+                @@@ {1 ~ 30|1} (casado | divorciado) -> ['nombre','id','estado_civil']
+
+                si esto no es asi se producira una excepcion llamada
+
+                exceso de campos 
+        '''
+        self.__calculateRows = True
+        return True
+        # se tendra un getter que al ser llamado se activara
+        # se comprobara en el cuerpo de la funcion si esta vareable esta activa
+    @enableCalculateRows.setter
+    def enableCalculateRows(self,dataList:list) -> None:
+        '''
+        dataList -> la lista de valores discutida en el metodo getter
+        '''
+        self.__dataList = dataList
+    async def insertorType(self,typeInsertion:bool,data,iteration,insertNewFile:bool):
+        '''
+        esta funcion realizara ambos tipos de inserts 
+        si la bandera typeInsertion es true se hara el insert con valores
+        si no es asi se hara el insert normal 
+        '''
+        insertion = ''
+        if typeInsertion:
+            # si es true se hara la forma con campos calculados
+            insertion = f'INSERT INTO {self.__tableName}({",".join(self.__dataList)}) VALUES ('
+        else:
+            insertion = f'INSERT INTO {self.__tableName} VALUES ('
+        if insertNewFile:
+            self.filename.write(f'{data});\n')
+            if iteration < self.maxIteration:
+                self.filename.write(insertion)
+        else:
+            self.filename.write(f'{data},')
+    def convert2str(self,data,flag:bool):
+        if flag:
+            return str(data)
+        else:
+            return data
+    async def toSql(self,data,iteration:int,convert2Str:bool=False,insertNewFile:bool=False):
         '''
         esta funcion se llamara por cada dato que se procesara ejemplo:
 
         'ivan',11 etc se habra llamado 2 veces
 
+        data -> el dato a almacenar
+        iteration -> el numero de la iteracion
         tableName -> nombre de la tabla
         convert2str -> es una bandera que se pasara por cada dato con ella nos aseguraremos de que si no es necesario convertir a string
         entonces no se hara y se respetara el hecho de que es un entero
@@ -249,9 +332,36 @@ class DataWriter:
         insertNewFile -> cada que sea true se insertara una nueva linea en el archivo es decir un \\n \n
 
         '''
-        self.loadFilename()
-        
-        pass
+        #self.loadFilename()
+        if self.__calculateRows and len(self.__dataList) != 0:
+            # checamos si se activo calculate rows
+            # si es asi usaremos la sintaxis de  insersion de datos con nombre de campos
+            await self.insertorType(True,self.convert2str(data,convert2Str),iteration,maxIteration,insertNewFile)
+            # inicio de la escritura de datos
+        else:
+            # insercion clasica
+
+            await self.insertorType(False,self.convert2str(data,convert2Str),iteration,maxIteration,insertNewFile)
+"""dw = DataWriter('tests.txt','sql',6)
+dw.setTableName = 'HELLO_WORLD'
+dw.enableCalculateRows
+dw.enableCalculateRows = ['id','nombre','estado_civil']
+sqd = ['','carlos','soltero',1,'ivan','soltero',3,'ipsops','electrasss',22]
+async def rg(dw,sqd):
+    for n,x in enumerate(sqd):
+        ins = False
+        if n%3 == 0:
+            ins = True
+        #print(n,ins)
+        await dw.toSql(x,n,len(sqd) -1 ,insertNewFile=ins)
+async def main():
+    await asyncio.gather(
+        rg(dw,sqd)
+    )
+asyncio.run(main())"""
+
+
+
 #print(DEFAULT_DCT.get('names')[0])
 #test = LoadData(lst=[DEFAULT_DCT.get('names')[0]])
 #test.getFilter = lambda x: x if len(x) <= 6 else False
