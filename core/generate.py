@@ -1,9 +1,9 @@
 import asyncio
-from colorama import Fore,Style
+from . import Fore,Style
 from tqdm.asyncio import trange
 #from inspect import isfunction
 
-from DGT.core.merger import DEFAULT_DCT, LoadData
+from DGT.core.merger import DEFAULT_DCT, LoadData,DataWriter
 
 class Generator(LoadData):
     def __init__(self,modules,chainList,rows) -> None:
@@ -187,7 +187,8 @@ class Generator(LoadData):
                     #print(self.setColumnNumber)
                     #print(await super().randomIndex(element[-1]))
                     #print('IMPORTANT',num,cot,element,await super().randomIndex(element[-1]))
-                    yield await super().randomIndex(element[-1])#super().readRowData(element[-1])# el modulo es el ultimo elemento
+                        
+                    yield await super().randomIndex(element[-1],lambda x: len(x) < element[0][0][1])#super().readRowData(element[-1])# el modulo es el ultimo elemento
                 #print(element[0][1][0],element[0][1][1])
             else:
                 '''
@@ -207,7 +208,7 @@ class Generator(LoadData):
                         case 'numbers':
                             # mandamos a llamar y retornamos valor
                             yield function(element[0][1])
-                        case 'guid':
+                        case 'guids':
                             yield function()
                         case 'abso':
                             if len(element[0]) <= 2:
@@ -236,11 +237,13 @@ class Generator(LoadData):
                                 #print('nx',hash)
                                 #await asyncio.sleep(3)
                                 #element[0].insert(0,'r')
+                                """                                
                                 try:
                                     res = next(self.hashLists.get(hash))
                                 except StopIteration:
                                     res = 0
                                 yield res# devolveremos el primer valor
+                                """
                             try:
                                 res = next(self.hashLists.get(self.getHash(element[0]),None))# obtenemos el siguiente valor
                             except StopIteration:
@@ -327,7 +330,11 @@ class Generator(LoadData):
         # check nuddles se encargara de activarla cada que sea necesario
         #iterRows = 0:
         #print('iteration',iterRows)
-        ops = open('tests.txt','w+')
+        writter = DataWriter('test.txt','sql',self.rows)
+        writter.setTableName = 'NOMBRES_ESTADOS'
+        writter.enableCalculateRows
+        writter.enableCalculateRows = ['NOMBRE','ID']
+        #ops = open('tests.txt','w+')
         for itm in trange(0,self.rows):
             for x in self.chainList:
                 #print(x)
@@ -345,17 +352,19 @@ class Generator(LoadData):
                             self.resps.append(res)
                             #print('res',res)
                         else:
-                            ops.write(str(res) + ' ')
+                            await writter.toSql(res,itm)
+                            #ops.write(str(res) + ' ')
                     smstr = ''
                     for concat in self.resps:
                         #print('con',concat)
-                        smstr += ' '
                         smstr += str(concat)
+                        smstr += ''
                     #print('concat',smstr,self.resps)
                     
                     if smstr != '':
-                        ops.write(smstr)
-                    ops.write('\n')
+                        await writter.toSql(smstr,itm,convert2Str=True)
+            await writter.toSql('',itm,insertNewFile=True)# insertamos una nueva
+                    #ops.write('\n')
                     
         """_summary_
         EL RESULTADO DE ESTE CODIGO ARROJA

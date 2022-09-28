@@ -104,11 +104,16 @@ class Oasis:
         self.string += ' '
         self.loadModules = []
         self.kwds = kwds
+        self.__separator = ','
         self.procesateString()
         #self.loadMod(data=self.jop)
         
         #print(self.normalMarker,self.markerPersonal)
-
+    @property
+    def setSeparator(self): return self.__separator
+    @setSeparator.setter
+    def setSeparator(self,sep):
+        self.__separator = sep
     @staticmethod
     def findCoincidence(ccNum,number,codecs):
         ps = []
@@ -375,7 +380,7 @@ class Oasis:
         #print('copy list',cpy)
         self.loadMod(mods,ncodecs)# cargamos los modulos
         #self.lddata.generateCoords.update({'codecs':ncodecs})
-        self.lddata.setSeparator = ';'
+        self.lddata.setSeparator = self.setSeparator
         self.lddata.run()
         # '''
     def decode(self,ncodecs):
@@ -462,7 +467,7 @@ class Oasis:
         #print('DCT DISTTT', DEFAULT_DCT.get(self.kwds.get(42)))
         self.lddata = Generator(dct,ncodecs,self.rows)
         #self.lddata = LoadData(list(self.loadModules))
-ps = Oasis('`+@@@@ [()]',rows=4)
+ps = Oasis('[+@@@@@@@@@@] {1 ~ 300 | 1}',rows=300)
 # [ [[96,64, 64, 64, 64, 64],[94,94,94,94,94]],[35,35,35,35,35,35,35,35],[[]]]] [`@@@@@ ^^^^^] ######## [@@@@@@ $$$$$$$]
 # [12 ~ 2000]
 # [[2,64,64],[12,12,12,12]],[44,4,4,4,4,4],[]
